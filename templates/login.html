@@ -6,12 +6,40 @@
 
 {% block main %}
     <form action="/login" method="post">
-        <div class="mb-3">
-            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="username" placeholder="Username" type="text">
+        <div>
+            <p>Username</p>
+            {% if username %}
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="username" placeholder="Username" type="text" value = {{username}}>
+            {% else %}
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="username" placeholder="Username" type="text" value = "">
+            {% endif %}
+
+            {% if status_username%}
+            <p name="status_username">{{status_username}}</p>
+            {%endif%}
         </div>
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" name="password" placeholder="Password" type="password">
+        <br>
+        <div>
+            <p>Password</p>
+            {% if password %}
+            <input name="password" placeholder="Password" type="password" value={{password}}>
+            {%else%}
+            <input name="password" placeholder="Password" type="password" value="">
+            {%endif%}
+
+            {% if status_password%}
+            <p name="status_password">{{status_password}}</p>
+            {%endif%}
         </div>
-        <button class="btn btn-primary" type="submit">Log In</button>
+        <br>
+        <div>
+            {%if status_over%}
+            <p>{{status_over}}</p>
+            {%endif%}
+        </div>
+        <button type="submit">Log In</button>
+        <div class="mb-3">
+            <p>If you don't have an account, register <a href="/register">here</a>.</p>
+        </div>
     </form>
 {% endblock %}

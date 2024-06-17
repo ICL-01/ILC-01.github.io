@@ -8,13 +8,40 @@
     <form action="/register" method="post">
         <div>
             <p>Username</p>
-            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="username" placeholder="Username" type="text" value="">
+            {% if username %}
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="username" placeholder="Username" type="text" value = {{username}}>
+            {% else %}
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="username" placeholder="Username" type="text" value = "">
+            {% endif %}
+
+            {% if status_username%}
+            <p name="status_username">{{status_username}}</p>
+            {%endif%}
         </div>
+        <br>
         <div>
             <p>Password</p>
+            {% if password %}
+            <input name="password" placeholder="Password" type="password" value={{password}}>
+            {%else%}
             <input name="password" placeholder="Password" type="password" value="">
+            {%endif%}
+
+            {% if status_password%}
+            <p name="status_password">{{status_password}}</p>
+            {%endif%}
+
+            <br>
             <p>Confirm Password</p>
-            <input name = "confirmation" placeholder="Password" type="password" value="">
+            {%if confirmation%}
+            <input name = "confirmation" placeholder="Password" type="password"  value={{confirmation}}>
+            {%else%}
+            <input name = "confirmation" placeholder="Password" type="password"  value="">
+            {%endif%}
+
+            {%if status_equality%}
+            <p name="status_equality">{{status_equality}}</p>
+            {%endif%}
         </div>
         <button type="submit">Register</button>
 
