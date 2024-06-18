@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Change Name
+{% endblock %}
+
+{% block main %}
+    <form action="/namechange" method="post">
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" id="currentname" name="currentname" placeholder="Current Name" >
+        </div>
+        <br>
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" id="newname" name="newname" placeholder="New Name" >
+        </div>
+        <p>{{status_name}}</p>
+        <button class="btn btn-primary" type="submit">Submit</button>
+    </form>
+{% endblock %}

@@ -1,0 +1,5 @@
+-- database: e:\71566273\ICL-01.github.io\dentos.db
+
+-- Use the ▷ button in the top right corner to run the entire file.
+
+SELECT * FROM employees;
