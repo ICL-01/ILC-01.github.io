@@ -30,8 +30,8 @@ def after_request(response):
 @app.route("/")
 @login_required
 def index():
-    rows = db.execute("SELECT id FROM employees")
-    if session["user_id"] in rows:
+    rows = db.execute("SELECT * FROM users")
+    if rows[0]["admin"] == 1:
         return render_template("index.html", admin=1)
     return render_template("index.html")
 
@@ -61,35 +61,17 @@ def login():
             return render_template("login.html", username=username, status_password=status_password)
 
         # Query database for username
-        rowsguests = db.execute(
-            "SELECT * FROM users WHERE username = ?", request.form.get("username")
-        )
-        rowsemployees = db.execute(
-            "SELECT * FROM employees WHERE username = ?", request.form.get("username")
-        )
+        rows = db.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
 
-        guest = int(request.form.get("guest"))
+        # Ensure username exists and password is correct
+        if len(rows) != 1 or not check_password_hash(
+            rows[0]["hash"], request.form.get("password")
+        ):
+            status_over = "Username or password are not correct."
+            return render_template("login.html", username=username, password=password, status_over=status_over)
+        # Remember which user has logged in
+        session["user_id"] = rows[0]["id"]
 
-        if guest == 1:
-            # Ensure username exists and password is correct
-            if len(rowsguests) != 1 or not check_password_hash(
-                rowsguests[0]["hash"], request.form.get("password")
-            ):
-                status_over = "Username or password are not correct."
-                return render_template("login.html", username=username, password=password, status_over=status_over)
-            # Remember which user has logged in
-            session["user_id"] = rowsguests[0]["id"]
-
-        else:
-                # Ensure username exists and password is correct
-            if len(rowsemployees) != 1 or not check_password_hash(
-                rowsemployees[0]["hash"], request.form.get("password")
-            ):
-                status_over = "Username or password are not correct."
-                return render_template("login.html", username=username, password=password, status_over=status_over)
-            # Remember which user has logged in
-            session["user_id"] = rowsemployees[0]["id"]
-       
 
         # Redirect user to home page
         return redirect("/")
@@ -143,25 +125,17 @@ def register():
                         return render_template("register.html", username=username, password=password, confirmation=confirmation, status_equality=status_equality)
 
 
-        rowsguests = db.execute("SELECT * FROM users WHERE username = ?", username)
-        rowsemployees = db.execute("SELECT * FROM employees WHERE username = ?", username)
+        rows = db.execute("SELECT * FROM users WHERE username = ?", username)
         hash = generate_password_hash(password)
 
-       
+
         #Check if user already exists
-        if len(rowsguests) > 0 and guest == 1:
-            status_equality = "There is an account with this username. Please choose another one."
-            return render_template("register.html", username=username, password=password, confirmation=confirmation, status_equality=status_equality)
-        if len(rowsemployees) > 0 and guest != 1:
+        if len(rows) > 0:
             status_equality = "There is an account with this username. Please choose another one."
             return render_template("register.html", username=username, password=password, confirmation=confirmation, status_equality=status_equality)
 
-        if guest == 1:
-            db.execute("INSERT INTO users (username, hash) VALUES (?,?)", username, hash)
-            rows = db.execute("SELECT * FROM users WHERE username = ?", username)
-        else:
-            db.execute("INSERT INTO employees (username, hash, admin) VALUES (?,?)", username, hash, 1)
-            rows = db.execute("SELECT * FROM employees WHERE username = ?", username)
+        db.execute("INSERT INTO users (username, hash) VALUES (?,?)", username, hash)
+        rows = db.execute("SELECT * FROM users WHERE username = ?", username)
 
         # Remember which user has logged in
         session["user_id"] = rows[0]["id"]
@@ -170,7 +144,6 @@ def register():
 
     else:
         return render_template("register.html")
-    
 
 @app.route("/logout")
 def logout():
@@ -220,7 +193,7 @@ def passwordchange():
 
     else:
         return render_template("passwordchange.html")
-    
+
 @app.route("/namechange",  methods=["GET", "POST"])
 @login_required
 def namechange():
@@ -254,20 +227,105 @@ def settings():
 def account():
     """Show settings"""
     # Query database
-    username = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])
-    return render_template("account.html", username=username[0]['username'])
+    username = db.execute("SELECT * FROM users WHERE id = ?", session["user_id"])
+    bookings = db.execute("SELECT * FROM bookings WHERE username = ? ORDER BY date DESC", username[0]["username"])
+    clients = db.execute("SELECT * FROM users WHERE admin = ? ORDER BY username", 0)
+    employees = db.execute("SELECT * FROM users WHERE admin = ? ORDER BY username", 1)
+    admins = db.execute("SELECT * FROM users WHERE admin = ? ORDER BY username", 2)
+    return render_template("account.html", username=username[0], bookings=bookings, clients=clients, employees=employees, admins=admins)
 
 @app.route("/bookings", methods=["GET", "POST"])
 @login_required
 def bookings():
-    return render_template("bookings.html")
+    user = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])
+    bookings = db.execute("SELECT * FROM bookings WHERE username = ? ORDER BY date DESC", user[0]["username"])
+    return render_template("bookings.html", bookings=bookings, user=user[0]['username'])
 
-@app.route("/shop", methods=["GET","POST"])
+@app.route("/makebooking", methods=["GET","POST"])
 @login_required
-def shop():
-    return render_template("shop.html")
+def makebooking():
+    user = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])
+    recentcheck = db.execute("SELECT date FROM bookings WHERE username = ? AND type = ? ORDER BY date DESC LIMIT 1", user[0]["username"], "Check")
+    if request.method == "POST":
+        date = request.form.get("date")
+        booktype=request.form.get("booktype")
+        duration = 60
+        db.execute("INSERT INTO bookings (username, type, duration, date) VALUES (?,?,?,?)", user[0]['username'], booktype, duration, date)
+        return redirect("/bookings")
+    else:
+        if len(recentcheck) > 0:
+            return render_template("makebooking.html", user=user[0]['username'], recentcheck=recentcheck[0])
+        else:
+            return render_template("makebooking.html", user=user[0]["username"])
 
 @app.route("/aboutus")
 def aboutus():
     username = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])
     return render_template("aboutus.html", username=username[0]['username'])
+
+@app.route("/registerAdmin", methods=["GET","POST"])
+@login_required
+def registerAdmin():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        confirmation = request.form.get("confirmation")
+        guest = int(request.form.get("guest"))
+
+        if not username:
+            status_username = "Missing Username."
+            if not password:
+                status_password = "Password missing."
+                if not confirmation:
+                    status_equality = "Missing Confirmation"
+                    return render_template("registerAdmin.html", status_username = status_username, status_password=status_password, status_equality=status_equality)
+                else:
+                    return render_template("registerAdmin.html", status_username = status_username, status_password=status_password)
+            else:
+                if not confirmation:
+                    status_equality = "Missing Confirmation"
+                    return render_template("registerAdmin.html", status_username=status_username, password=password, status_equality=status_equality)
+                else:
+                    if confirmation != password:
+                        status_equality="Passwords do not match."
+                        return render_template("registerAdmin.html", status_username = status_username, password=password, confirmation=confirmation, status_equality=status_equality)
+                    else:
+                        return render_template("registerAdmin.html", status_username = status_username, password=password, confirmation=confirmation)
+        else:
+            if not password:
+                status_password = "Password missing."
+                if not confirmation:
+                    status_equality = "Missing Confirmation"
+                    return render_template("registerAdmin.html", username=username, status_password=status_password, status_equality=status_equality)
+                else:
+                    return render_template("registerAdmin.html", username=username, status_password=status_password)
+            else:
+                if not confirmation:
+                    status_equality = "Missing Confirmation"
+                    return render_template("registerAdmin.html", username=username, password=password, status_equality=status_equality)
+                else:
+                    if confirmation != password:
+                        status_equality="Passwords do not match."
+                        return render_template("registerAdmin.html", username=username, password=password, confirmation=confirmation, status_equality=status_equality)
+
+
+        rows = db.execute("SELECT * FROM users WHERE username = ?", username)
+        hash = generate_password_hash(password)
+
+
+        #Check if user already exists
+        if len(rows) > 0:
+            status_equality = "There is an account with this username. Please choose another one."
+            return render_template("registerAdmin.html", username=username, password=password, confirmation=confirmation, status_equality=status_equality)
+
+        guest = int(request.form.get("guest"))
+        if guest == 0:
+            db.execute("INSERT INTO users (username, hash) VALUES (?,?)", username, hash)
+        else:
+             db.execute("INSERT INTO users (username, hash, admin) VALUES (?,?,?)", username, hash, guest)
+        rows = db.execute("SELECT * FROM users WHERE username = ?", username)
+
+        return redirect("/")
+
+    else:
+        return render_template("registerAdmin.html")

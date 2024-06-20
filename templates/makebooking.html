@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Bookings
+{% endblock %}
+
+{% block main %}
+<div class="card" style="text-align: left">
+    <div class="card-header" id="text-start">
+        {%if recentcheck%}
+            Bookings - {{user}} | Most recent check: {{recentcheck.date}}
+        {%else%}
+            Bookings - {{user}} | Most recent check: None
+        {%endif%}
+    </div>
+    <div class="card-body">
+        <h5 class="card-title">New Booking</h5>
+        <form action="/makebooking" method="post">
+            <h6 class="card-title">Name: <a name="username">{{user}}</a></h6>
+            <select class="fw-bold" style='margin: 0' name="booktype" required=true>
+                <option value="">Please select a booking type</option>
+                <option value="Check">Check</option>
+                <option value="Floss">Floss</option>
+                <option value="Dental Whitening">Dental Whitening</option>
+            </select>
+            <br> 
+            <p>Date:</p>
+            <input type="date" id="datetime-local" name="date">
+            <button class="btn btn-primary" type="submit">Add</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

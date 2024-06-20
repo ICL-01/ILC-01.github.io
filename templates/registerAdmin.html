@@ -43,12 +43,9 @@
             <p name="status_equality">{{status_equality}}</p>
             {%endif%}
         </div>
-        <button type="submit" name="guest" value="1">Register Guest</button>
-        <button type="submit" name="guest" value="0">Enroll Employee</button>
-        {%if admin%}
+        <button type="submit" name="guest" value="0">Register Guest</button><br>
+        <button type="submit" name="guest" value="1">Enroll Employee</button><br>
         <button type="submit" name="guest" value="2">Enroll Admin</button>
-        {%endif%}
-
 
     </form>
 {% endblock %}

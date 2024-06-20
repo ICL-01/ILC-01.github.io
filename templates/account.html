@@ -5,15 +5,78 @@
 {% endblock %}
 
 {% block main %}
-<div class="card" style="text-align: left">
-    <div class="card-header" id="text-start">
-        Account
+    <div class="card" style="text-align: left">
+        <div class="card-header" id="text-start">
+            Account
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">User Credentials</h5>
+            <p class="fw-bold" style='margin: 0'>{{username.username}}</p>
+            <p class="fw-lighter text-muted" >USERNAME</p>
+        </div>
     </div>
-    <div class="card-body">
-        <h5 class="card-title">User Credentials</h5>
-        <p class="fw-bold" style='margin: 0'>{{username}}</p>
-        <p class="fw-lighter text-muted" >USERNAME</p>
-    </div>
+
+    {%if bookings%}
+        <div class="card" style="text-align: left">
+            <div class="card-header" id="text-start">
+                Bookings - {{user}}
+            </div>
+            <div class="card-body">
+                {%for booking in bookings%}
+                <p class="fw-bold" style='margin: 0'>{{booking.type}}</p>
+                <h5 class="card-title">{{booking.date}}</h5>
+                <hr>
+                {%endfor%}
+            </div>
+    {%endif%}
+
+    {% if username.admin > 0 %}
+        <div class="card" style="text-align: left">
+            <div class="card-header" id="text-start">
+                Add Employee/Guest
+            </div>
+            <div class="card-body">
+                <a href="/registerAdmin" class="btn btn-primary">Register Person</a>
+            </div>
+        </div>
+    {%endif%}
+
+    {% if username.admin > 0 %}
+        <div class="card" style="text-align: left">
+            <div class="card-header" id="text-start">
+                Clients
+            </div>
+            <div class="card-body">
+                {% for client in clients%}
+                    <p class="fw-bold" style='margin: 0'>{{client.username}}</p>
+                {% endfor %}
+                <hr>
+            </div>
+
+            {% if username.admin > 1 %}
+                <div class="card-header" id="text-start">
+                    Personal
+                </div>
+                <div class="card-body">
+                    {% if employees %}
+                        <h5 class="card-title">Employees</h5>
+                        {% for employee in employees%}
+                            <p class="fw-bold" style='margin: 0'>{{employee.username}}</p>
+                        {% endfor %}
+                        <hr>
+                    {% endif %}
+
+                    {% if admins %}
+                        <h5 class="card-title">Admins</h5>
+                        {% for admin in admins%}
+                            <p class="fw-bold" style='margin: 0'>{{admin.username}}</p>
+                        {% endfor %}
+                        <hr>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
 </div>
 
 {% endblock %}
